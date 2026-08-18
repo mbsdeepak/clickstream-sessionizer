@@ -1,0 +1,47 @@
+# ---------------------------------------------------------------------------
+# Clickstream Sessionizer configuration.
+# Every path is relative to the project root unless made absolute at load time.
+# ---------------------------------------------------------------------------
+
+# Inactivity gap that closes a session. Web analytics tools (GA, Adobe) use
+# 30 minutes by convention: if a user is idle longer than this, the next event
+# starts a fresh session.
+session_gap_minutes: 30
+
+# Lake layout (medallion architecture).
+paths:
+  raw: "data/raw"           # generate_events.py writes gzipped JSON here
+  bronze: "data/bronze"     # typed Parquet, schema-on-read applied
+  silver: "data/silver"     # cleaned + enriched events
+  sessions: "data/sessions" # sessionized output (one row per session)
+  gold: "data/gold"         # business aggregates (funnel, retention, ...)
+  checkpoints: "data/checkpoints"  # Structured Streaming checkpoints
+
+# Columns used to physically partition Parquet output. event_date gives good
+# partition pruning for time-range queries without exploding the file count.
+partition_cols:
+  - "event_date"
+
+# Skew handling: hot users (bots, crawlers, power users) concentrate rows on a
+# few keys and stall a single reduce task. We split each key into N salted
+# sub-keys so the heavy aggregation fans out across tasks, then re-aggregate.
+salting:
+  factor: 16                # number of salt buckets per key
+  # Only salt keys above this row count; small keys don't need the overhead.
+  hot_key_threshold: 5000
+
+# Synthetic data generation defaults (overridable on the CLI).
+generator:
+  num_events: 400000
+  num_users: 20000
+  num_hot_users: 15         # power users / bots that create data skew
+  hot_user_share: 0.35      # fraction of all events owned by hot users
+  num_days: 3
+  seed: 42
+
+# Spark runtime knobs.
+spark:
+  master: "local[*]"
+  app_name: "clickstream-sessionizer"
+  shuffle_partitions: 16    # sane default for a laptop; scale up on a cluster
+  adaptive_enabled: true    # AQE: coalesces shuffle partitions + fixes skew joins

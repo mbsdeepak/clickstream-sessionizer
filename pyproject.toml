@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clickstream-sessionizer"
+version = "0.1.0"
+description = "A PySpark lakehouse that sessionizes clickstream events (medallion architecture, window-function sessionization, skew handling, broadcast joins, Structured Streaming)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Deepak" }]
+keywords = ["pyspark", "spark", "clickstream", "sessionization", "lakehouse", "medallion", "streaming"]
+dependencies = [
+    "pyspark==4.0.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0", "chispa>=0.10.1"]
+
+[project.scripts]
+sessionizer = "clickstream_sessionizer.pipeline:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+# Silence the flood of Spark/py4j logging during test runs.
+log_cli = false

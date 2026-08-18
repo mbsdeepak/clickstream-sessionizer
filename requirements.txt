@@ -1,0 +1,9 @@
+# PySpark 4.0.0 is pinned deliberately: it supports Java 17/21 and Scala 2.13.
+# Spark 3.5 does NOT officially support the Java 21 runtime shipped on this
+# machine, so 4.0.0 avoids the "unsupported class file major version" / illegal
+# reflective access failures you hit on 3.5 + JDK 21.
+pyspark==4.0.0
+pytest>=8.0
+# Optional: nicer DataFrame assertions in tests. Not required to run the suite.
+chispa>=0.10.1
+PyYAML>=6.0
